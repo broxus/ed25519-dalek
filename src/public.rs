@@ -12,12 +12,12 @@
 use core::convert::TryFrom;
 use core::fmt::Debug;
 
-use curve25519_dalek::constants;
-use curve25519_dalek::digest::generic_array::typenum::U64;
-use curve25519_dalek::digest::Digest;
-use curve25519_dalek::edwards::CompressedEdwardsY;
-use curve25519_dalek::edwards::EdwardsPoint;
-use curve25519_dalek::scalar::Scalar;
+use curve25519_dalek_ng::constants;
+use curve25519_dalek_ng::digest::generic_array::typenum::U64;
+use curve25519_dalek_ng::digest::Digest;
+use curve25519_dalek_ng::edwards::CompressedEdwardsY;
+use curve25519_dalek_ng::edwards::EdwardsPoint;
+use curve25519_dalek_ng::scalar::Scalar;
 
 use ed25519::signature::Verifier;
 
@@ -28,7 +28,7 @@ use serde::de::Error as SerdeError;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 #[cfg(feature = "serde")]
-use serde_bytes::{Bytes as SerdeBytes, ByteBuf as SerdeByteBuf};
+use serde_bytes::{ByteBuf as SerdeByteBuf, Bytes as SerdeBytes};
 
 use crate::constants::*;
 use crate::errors::*;
@@ -131,7 +131,8 @@ impl PublicKey {
             return Err(InternalError::BytesLengthError {
                 name: "PublicKey",
                 length: PUBLIC_KEY_LENGTH,
-            }.into());
+            }
+            .into());
         }
         let mut bits: [u8; 32] = [0u8; 32];
         bits.copy_from_slice(&bytes[..32]);
@@ -195,7 +196,10 @@ impl PublicKey {
         let k: Scalar;
 
         let ctx: &[u8] = context.unwrap_or(b"");
-        debug_assert!(ctx.len() <= 255, "The context must not be longer than 255 octets.");
+        debug_assert!(
+            ctx.len() <= 255,
+            "The context must not be longer than 255 octets."
+        );
 
         let minus_A: EdwardsPoint = -self.1;
 
@@ -284,8 +288,7 @@ impl PublicKey {
         &self,
         message: &[u8],
         signature: &ed25519::Signature,
-    ) -> Result<(), SignatureError>
-    {
+    ) -> Result<(), SignatureError> {
         let signature = InternalSignature::try_from(signature)?;
 
         let mut h: Sha512 = Sha512::new();
@@ -326,12 +329,7 @@ impl Verifier<ed25519::Signature> for PublicKey {
     ///
     /// Returns `Ok(())` if the signature is valid, and `Err` otherwise.
     #[allow(non_snake_case)]
-    fn verify(
-        &self,
-        message: &[u8],
-        signature: &ed25519::Signature
-    ) -> Result<(), SignatureError>
-    {
+    fn verify(&self, message: &[u8], signature: &ed25519::Signature) -> Result<(), SignatureError> {
         let signature = InternalSignature::try_from(signature)?;
 
         let mut h: Sha512 = Sha512::new();
